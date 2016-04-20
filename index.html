@@ -1,7 +1,7 @@
 <!-- 
 
 This is not a Mixpanel product, nor has it gone through a formal review process.
-Please be careful making any decisions based on this code.
+Please be careful making any decisions based on this code; we are not responsible for the results.
 
 -->
 
@@ -63,6 +63,8 @@ function createUserState(state, items) {
   state = state || {sequence: []};
   function stateUpdater(event) {
     if (!state.done) {
+      if (!state.start_time)
+        state.start_time = event.time;
       state.sequence = _.chain(state.sequence)
                       .filter(item => item.time + params.conversion_length > event.time)
                       .last(params.max_length - 1)
@@ -75,7 +77,7 @@ function createUserState(state, items) {
       if (params.start_event && params.start_event == state.sequence[0].name && state.sequence.length >= params.min_length) {
         var sequence_of_events = _.pluck(state.sequence, 'name');
         var chopped_sequence = _.contains(sequence_of_events, params.end_event)? _.first(state.sequence, _.lastIndexOf(sequence_of_events, params.end_event) + 1) : [];
-        if (!params.end_event)
+        if (!params.end_event && (event.time - params.conversion_length) > state.start_time)
           state.done = true;
         else if (params.end_event && chopped_sequence.length >= params.min_length) {
           state.done = true;
